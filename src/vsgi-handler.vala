@@ -17,20 +17,24 @@
 
 using GLib;
 
-/**
- * VSGI is an set of abstraction and implementations used to build generic web
- * application in Vala.
- *
- * It is minimalist and relies on libsoup-2.4, a good and stable HTTP library.
- */
-[CCode (gir_namespace = "VSGI", gir_version = "0.3")]
-namespace VSGI {
+[Version (since = "0.3")]
+public abstract class VSGI.Handler : Object {
 
+	/**
+	 * Process a pair of {@link VSGI.Request} and {@link VSGI.Response}.
+	 *
+	 * It is passed to a {@link VSGI.Server} in order to receive request to
+	 * process.
+	 *
+	 * @throws Error unrecoverable error condition can be raised and will be
+	 *               handled by the implementation
+	 *
+	 * @param req a resource being requested
+	 * @param res the response to that request
+	 *
+	 * @return 'true' if the request has been or will eventually be handled,
+	 *         otherwise 'false'
+	 */
 	[Version (since = "0.3")]
-	[CCode (has_target = false)]
-	public delegate Type HandlerInitFunc (TypeModule type_module);
-
-	[Version (since = "0.3")]
-	[CCode (has_target = false)]
-	public delegate Type ServerInitFunc (TypeModule module);
+	public abstract bool handle (Request req, Response res) throws Error;
 }
