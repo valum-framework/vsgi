@@ -35,6 +35,11 @@ if soup.version().version_compare('>=2.48')
     add_project_arguments('--define=SOUP_2_48', language: 'vala')
 endif
 
+# 'Soup.ClientContext.steal_connection'
+if soup.version().version_compare('>=2.50')
+    add_project_arguments('--define=SOUP_2_50', language: 'vala')
+endif
+
 if libsystemd.found()
     add_project_arguments('--define=LIBSYSTEMD', language: 'vala')
 endif

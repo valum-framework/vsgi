@@ -110,10 +110,12 @@ namespace VSGI.HTTP {
 			        headers:           msg.request_headers);
 		}
 
+#if SOUP_2_50
 		public override IOStream? steal_connection ()
 		{
 			return client_context.steal_connection ();
 		}
+#endif
 	}
 
 	/**
