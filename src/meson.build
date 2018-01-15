@@ -29,8 +29,8 @@ vsgi_lib = library('vsgi-' + api_version, vsgi_sources,
 install_data('vsgi-@0@.deps'.format(api_version),
              install_dir: 'share/vala/vapi')
 
-vsgi = declare_dependency(include_directories: include_directories('.'),
-                          link_with: vsgi_lib)
+vsgi_dep = declare_dependency(include_directories: include_directories('.'),
+                              link_with: vsgi_lib)
 
 g_ir_compiler = find_program('g-ir-compiler', required: false)
 if g_ir_compiler.found()
