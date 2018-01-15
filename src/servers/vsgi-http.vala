@@ -84,6 +84,8 @@ namespace VSGI.HTTP {
 		 */
 		public Message message { construct; get; }
 
+		public ClientContext client_context { construct; get; }
+
 		/**
 		 * {@inheritDoc}
 		 *
@@ -93,15 +95,24 @@ namespace VSGI.HTTP {
 		 * @param msg        message underlying this request
 		 * @param query      parsed HTTP query provided by {@link Soup.ServerCallback}
 		 */
-		public Request (Connection connection, Message msg, HashTable<string, string>? query) {
+		public Request (Connection                 connection,
+		                Message                    msg,
+		                ClientContext              client_context,
+		                HashTable<string, string>? query) {
 			Object (connection:        connection,
 			        message:           msg,
+			        client_context:    client_context,
 			        http_version:      msg.http_version,
 			        gateway_interface: "HTTP/1.1",
 			        method:            msg.method,
 			        uri:               msg.uri,
 			        query:             query,
 			        headers:           msg.request_headers);
+		}
+
+		public override IOStream? steal_connection ()
+		{
+			return client_context.steal_connection ();
 		}
 	}
 
@@ -278,7 +289,7 @@ namespace VSGI.HTTP {
 
 				msg.set_status (Status.OK);
 
-				var req = new Request (connection, msg, query);
+				var req = new Request (connection, msg, client, query);
 				var res = new Response (req, msg);
 
 				var auth = req.headers.get_one ("Authorization");

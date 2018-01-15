@@ -202,6 +202,14 @@ namespace VSGI {
 		}
 
 		/**
+		 * Steal the underlying connection object.
+		 *
+		 * @return a {@link GLib.IOStream} object if supported, otherwise 'null'
+		 */
+		[Version (since = "0.4")]
+		public virtual IOStream? steal_connection () { return null; }
+
+		/**
 		 * Lookup a cookie using its name.
 		 *
 		 * The last occurence is returned using a case-sensitive match.
