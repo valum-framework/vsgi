@@ -1,5 +1,0 @@
-event: important
-id: 1234
-retry: 1
-data: some event
-

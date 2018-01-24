@@ -17,179 +17,186 @@
 
 using VSGI;
 
-/**
- * @since 0.2
- */
-public void test_vsgi_cgi_request () {
-	string[] environment = {
-		"PATH_INFO=/",
-		"QUERY_STRING=a=b",
-		"REMOTE_USER=root",
-		"REQUEST_METHOD=GET",
-		"SERVER_NAME=0.0.0.0",
-		"SERVER_PORT=3003",
-		"HTTP_HOST=example.com"
-	};
+int main (string[] args) {
+	Test.init (ref args);
 
-	var req_body = new MemoryInputStream ();
-	var request  = new Request.from_cgi_environment (null, environment, req_body);
+	/**
+	 * @since 0.2
+	 */
+	Test.add_func ("/cgi", () => {
+		string[] environment = {
+			"PATH_INFO=/",
+			"QUERY_STRING=a=b",
+			"REMOTE_USER=root",
+			"REQUEST_METHOD=GET",
+			"SERVER_NAME=0.0.0.0",
+			"SERVER_PORT=3003",
+			"HTTP_HOST=example.com"
+		};
 
-	assert (Soup.HTTPVersion.@1_0 == request.http_version);
-	assert ("CGI/1.1" == request.gateway_interface);
-	assert ("GET" == request.method);
-	assert ("root" == request.uri.get_user ());
-	assert ("0.0.0.0" == request.uri.get_host ());
-	assert ("a=b" == request.uri.get_query ());
-	assert ("http://root@0.0.0.0:3003/?a=b" == request.uri.to_string (false));
-	assert (request.query.contains ("a"));
-	assert ("b" == request.query["a"]);
-	assert (3003 == request.uri.get_port ());
-	assert ("example.com" == request.headers.get_one ("Host"));
-	assert (req_body != request.body);
-}
+		var req_body = new MemoryInputStream ();
+		var request  = new Request.from_cgi_environment (null, environment, req_body);
 
-/**
- * @since 0.3
- */
-public void test_vsgi_cgi_request_gateway_interface () {
-	var request = new Request.from_cgi_environment (null, {"GATEWAY_INTERFACE=CGI/1.0"});
+		assert (request.is_cgi);
+		assert (Soup.HTTPVersion.@1_0 == request.http_version);
+		assert ("CGI/1.1" == request.gateway_interface);
+		assert ("GET" == request.method);
+		assert ("root" == request.uri.get_user ());
+		assert ("0.0.0.0" == request.uri.get_host ());
+		assert ("a=b" == request.uri.get_query ());
+		assert ("http://root@0.0.0.0:3003/?a=b" == request.uri.to_string (false));
+		assert (request.query.contains ("a"));
+		assert ("b" == request.query["a"]);
+		assert (3003 == request.uri.get_port ());
+		assert ("example.com" == request.headers.get_one ("Host"));
+		assert (req_body != request.body);
+	});
 
-	assert ("CGI/1.0" == request.gateway_interface);
-}
+	/**
+	 * @since 0.3
+	 */
+	Test.add_func ("/cgi/request/gateway-interface", () => {
+		var request = new Request.from_cgi_environment (null, {"GATEWAY_INTERFACE=CGI/1.0"});
 
-/**
- * @since 0.3
- */
-public void test_vsgi_cgi_request_content_type () {
-	var request = new Request.from_cgi_environment (null, {"CONTENT_TYPE=text/html; charset=UTF-8"});
+		assert ("CGI/1.0" == request.gateway_interface);
+	});
 
-	HashTable<string, string> @params;
-	assert ("text/html" == request.headers.get_content_type (out @params));
-	assert ("UTF-8" == @params["charset"]);
-}
+	/**
+	 * @since 0.3
+	 */
+	Test.add_func ("/cgi/request/content-type", () => {
+		var request = new Request.from_cgi_environment (null, {"CONTENT_TYPE=text/html; charset=UTF-8"});
 
-/**
- * @since 0.3
- */
-public void test_vsgi_cgi_request_content_length () {
-	var request = new Request.from_cgi_environment (null, {"CONTENT_LENGTH=12"});
+		HashTable<string, string> @params;
+		assert ("text/html" == request.headers.get_content_type (out @params));
+		assert ("UTF-8" == @params["charset"]);
+	});
 
-	assert (12 == request.headers.get_content_length ());
-}
+	/**
+	 * @since 0.3
+	 */
+	Test.add_func ("/cgi/request/content-length", () => {
+		var request = new Request.from_cgi_environment (null, {"CONTENT_LENGTH=12"});
 
-/**
- * @since 0.3
- */
-public void test_vsgi_cgi_request_content_length_malformed () {
-	var request = new Request.from_cgi_environment (null, {"CONTENT_LENGTH=12a"});
+		assert (12 == request.headers.get_content_length ());
+	});
 
-	assert (0 == request.headers.get_content_length ());
-}
+	/**
+	 * @since 0.3
+	 */
+	Test.add_func ("/cgi/request/malformed-content-length", () => {
+		var request = new Request.from_cgi_environment (null, {"CONTENT_LENGTH=12a"});
 
-/**
- * @since 0.2
- */
-public void test_vsgi_cgi_request_missing_path_info () {
-	string[] environment = {};
-	var request     = new Request.from_cgi_environment (null, environment);
+		assert (0 == request.headers.get_content_length ());
+	});
 
-	assert ("/" == request.uri.get_path ());
-}
+	/**
+	 * @since 0.2
+	 */
+	Test.add_func ("/cgi/request/missing-path-info", () => {
+		string[] environment = {};
+		var request     = new Request.from_cgi_environment (null, environment);
 
-/**
- * @since 0.2
- */
-public void test_vsgi_cgi_request_http_1_1 () {
-	string[] environment = {"SERVER_PROTOCOL=HTTP/1.1"};
+		assert ("/" == request.uri.get_path ());
+	});
 
-	var request = new Request.from_cgi_environment (null, environment);
+	/**
+	 * @since 0.2
+	 */
+	Test.add_func ("/cgi/request/http-1-1", () => {
+		string[] environment = {"SERVER_PROTOCOL=HTTP/1.1"};
 
-	assert (Soup.HTTPVersion.@1_1 == request.http_version);
-}
+		var request = new Request.from_cgi_environment (null, environment);
 
-/**
- * @since 0.2.4
- */
-public void test_vsgi_cgi_request_https_detection () {
-	string[] environment = {"PATH_TRANSLATED=https://example.com:80/"};
+		assert (Soup.HTTPVersion.@1_1 == request.http_version);
+	});
 
-	var request = new Request.from_cgi_environment (null, environment);
+	/**
+	 * @since 0.2.4
+	 */
+	Test.add_func ("/cgi/request/https-detection", () => {
+		string[] environment = {"PATH_TRANSLATED=https://example.com:80/"};
 
-	assert ("https" == request.uri.scheme);
-}
+		var request = new Request.from_cgi_environment (null, environment);
 
-/**
- * @since 0.2
- */
-public void test_vsgi_cgi_request_https_on () {
-	string[] environment = {
-		"PATH_INFO=/",
-		"REQUEST_METHOD=GET",
-		"REQUEST_URI=/",
-		"SERVER_NAME=0.0.0.0",
-		"SERVER_PORT=3003",
-		"HTTPS=on"
-	};
+		assert ("https" == request.uri.scheme);
+	});
 
-	var request    = new Request.from_cgi_environment (null, environment);
+	/**
+	 * @since 0.2
+	 */
+	Test.add_func ("/cgi/request/https-on", () => {
+		string[] environment = {
+			"PATH_INFO=/",
+			"REQUEST_METHOD=GET",
+			"REQUEST_URI=/",
+			"SERVER_NAME=0.0.0.0",
+			"SERVER_PORT=3003",
+			"HTTPS=on"
+		};
 
-	assert ("https" == request.uri.scheme);
-}
+		var request    = new Request.from_cgi_environment (null, environment);
 
-/**
- * @since 0.2
- */
-public void test_vsgi_cgi_request_request_uri () {
-	string[] environment = {
-		"REQUEST_METHOD=GET",
-		"SERVER_NAME=0.0.0.0",
-		"SERVER_PORT=3003",
-		"QUERY_STRING=a=b",
-		"REQUEST_URI=/home?a=b"
-	};
+		assert ("https" == request.uri.scheme);
+	});
 
-	var request    = new Request.from_cgi_environment (null, environment);
+	/**
+	 * @since 0.2
+	 */
+	Test.add_func ("/cgi/request-uri", () => {
+		string[] environment = {
+			"REQUEST_METHOD=GET",
+			"SERVER_NAME=0.0.0.0",
+			"SERVER_PORT=3003",
+			"QUERY_STRING=a=b",
+			"REQUEST_URI=/home?a=b"
+		};
 
-	assert ("GET" == request.method);
-	assert ("/home" == request.uri.path);
-	assert ("a" in request.query);
-	assert ("b" == request.query["a"]);
-}
+		var request    = new Request.from_cgi_environment (null, environment);
 
-/**
- * @since 0.2
- */
-public void test_vsgi_cgi_request_uri_with_query () {
-	string[] environment = {
-		"PATH_INFO=/home",
-		"REQUEST_METHOD=GET",
-		"SERVER_NAME=0.0.0.0",
-		"SERVER_PORT=3003",
-		"REQUEST_URI=/home?a=b"
-	};
+		assert ("GET" == request.method);
+		assert ("/home" == request.uri.path);
+		assert ("a" in request.query);
+		assert ("b" == request.query["a"]);
+	});
 
-	var request    = new Request.from_cgi_environment (null, environment);
+		/**
+		 * @since 0.2
+		 */
+	Test.add_func ("/cgi/request-uri-with-query", () => {
+		string[] environment = {
+			"PATH_INFO=/home",
+			"REQUEST_METHOD=GET",
+			"SERVER_NAME=0.0.0.0",
+			"SERVER_PORT=3003",
+			"REQUEST_URI=/home?a=b"
+		};
 
-	assert ("/home" == request.uri.path);
-}
+		var request    = new Request.from_cgi_environment (null, environment);
 
-/**
- * @since 0.2
- */
-public void test_vsgi_cgi_response () {
-	string[] environment = {};
-	var request     = new Request.from_cgi_environment (null, environment);
-	var response    = new Response (request);
+		assert ("/home" == request.uri.path);
+	});
 
-	assert (Soup.Status.OK == response.status);
+	/**
+	 * @since 0.2
+	 */
+	Test.add_func ("/cgi/response", () => {
+		string[] environment = {};
+		var request     = new Request.from_cgi_environment (null, environment);
+		var response    = new Response (request);
 
-	size_t bytes_written;
-	try {
-		response.write_head (out bytes_written);
-	} catch (IOError err) {
-		assert_not_reached ();
-	}
-	assert (18 == bytes_written);
-	assert (response.head_written);
-	assert ("200 OK" == response.headers.get_one ("Status"));
+		assert (request.is_cgi);
+		assert (Soup.Status.OK == response.status);
+
+		size_t bytes_written;
+		try {
+			response.write_head (out bytes_written);
+		} catch (IOError err) {
+			assert_not_reached ();
+		}
+		assert (18 == bytes_written);
+		assert (response.head_written);
+	});
+
+	return Test.run ();
 }

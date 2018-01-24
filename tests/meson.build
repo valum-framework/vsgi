@@ -2,6 +2,8 @@
 vsgi_tests = [
     'application',
     'auth',
+    'cgi',
+    'cookies',
     'http-server',
     'multipart',
     'request',
@@ -24,7 +26,7 @@ loader_test_lib = shared_library('loader-test', 'loader-test.vala',
                                  dependencies: [glib, gobject, gio, gio_unix, soup, vsgi_dep])
 test('loader', vsgi_loader,
      args: ['--directory', meson.current_build_dir(), '--server=cgi', 'loader-test'],
-     env: ['VSGI_SERVER_PATH=src/vsgi/servers'])
+     env: ['VSGI_SERVER_PATH=' + join_paths(meson.current_build_dir(), '../src/servers')])
 
 python = find_program('python3')
 if g_ir_compiler.found()
