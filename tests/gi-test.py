@@ -1,4 +1,8 @@
 import unittest
+import gi
+gi.require_version('GLib', '2.0')
+gi.require_version('Soup', '2.4')
+gi.require_version('VSGI', '0.4')
 from gi.repository import GLib, Soup, VSGI
 
 class App(VSGI.Handler):
