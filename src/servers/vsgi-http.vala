@@ -150,6 +150,15 @@ namespace VSGI.HTTP {
 			Object (request: req, message: msg, headers: msg.response_headers);
 		}
 
+		construct {
+			message.wrote_informational.connect (() => {
+				wrote_headers (headers);
+			});
+			message.wrote_headers.connect (() => {
+				wrote_headers (headers);
+			});
+		}
+
 		/**
 		 * {@inheritDoc}
 		 *
