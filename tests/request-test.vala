@@ -84,6 +84,15 @@ public int main (string[] args) {
 		assert ("b" == new Request (null, "GET", new Soup.URI ("http://localhost:3003/"), Soup.Form.decode ("a=b")).lookup_query ("a"));
 	});
 
+	Test.add_func ("/request/steal_connection", () => {
+		var req = new Request (null, "GET", new Soup.URI ("http://localhost:3003/"), null);
+		assert (req.connection != null);
+		IOStream conn = req.steal_connection ();
+		assert (conn != null);
+		assert (req.connection == null);
+		assert (req.steal_connection () == null);
+	});
+
 	return Test.run ();
 }
 

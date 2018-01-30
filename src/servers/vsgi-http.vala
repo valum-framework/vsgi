@@ -111,9 +111,12 @@ namespace VSGI.HTTP {
 		}
 
 #if SOUP_2_50
-		public override IOStream? steal_connection ()
-		{
-			return client_context.steal_connection ();
+		public override IOStream? steal_connection () {
+			try {
+				return _client_context == null ? null : client_context.steal_connection ();
+			} finally {
+				_client_context = null;
+			}
 		}
 #endif
 	}
