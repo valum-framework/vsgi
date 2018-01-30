@@ -41,15 +41,18 @@ namespace VSGI.HTTP {
 		}
 
 		construct {
-			server.request_aborted.connect ((msg) => {
+			ulong aborted_id;
+			aborted_id = server.request_aborted.connect ((msg) => {
 				if (msg == message) {
 					aborted = true;
+					(server as Object).disconnect (aborted_id);
 				}
 			});
 		}
 
 		public override ssize_t write (uint8[] data, Cancellable? cancellable = null) throws IOError {
 			if (unlikely (aborted)) {
+				// FIXME: throw a IOError here
 				return -1;
 			}
 			message.response_body.append_take (data);
@@ -62,13 +65,16 @@ namespace VSGI.HTTP {
 		 */
 		public override bool flush (Cancellable? cancellable = null) throws IOError {
 			if (unlikely (aborted)) {
-				return false;
+				throw new IOError.CONNECTION_CLOSED ("Request has been aborted.");
 			}
 			server.unpause_message (message);
 			return true;
 		}
 
-		public override bool close (Cancellable? cancellable = null) {
+		public override bool close (Cancellable? cancellable = null) throws IOError {
+			if (unlikely (aborted)) {
+				throw new IOError.CONNECTION_CLOSED ("Request has been aborted.");
+			}
 			message.response_body.complete ();
 			return true;
 		}
@@ -95,19 +101,18 @@ namespace VSGI.HTTP {
 		 * @param msg        message underlying this request
 		 * @param query      parsed HTTP query provided by {@link Soup.ServerCallback}
 		 */
-		public Request (Connection                 connection,
-		                Message                    msg,
+		public Request (Message                    msg,
 		                ClientContext              client_context,
 		                HashTable<string, string>? query) {
-			Object (connection:        connection,
-			        message:           msg,
+			Object (message:           msg,
 			        client_context:    client_context,
 			        http_version:      msg.http_version,
 			        gateway_interface: "HTTP/1.1",
 			        method:            msg.method,
 			        uri:               msg.uri,
 			        query:             query,
-			        headers:           msg.request_headers);
+			        headers:           msg.request_headers,
+			        body:              new MemoryInputStream.from_data (msg.request_body.data, null));
 		}
 
 #if SOUP_2_50
@@ -125,6 +130,8 @@ namespace VSGI.HTTP {
 	 * Soup Response
 	 */
 	private class Response : VSGI.Response {
+
+		public Soup.Server soup_server { construct; get; }
 
 		/**
 		 * Message underlying this response.
@@ -146,8 +153,12 @@ namespace VSGI.HTTP {
 		 *
 		 * @param msg message underlying this response
 		 */
-		public Response (Request req, Message msg) {
-			Object (request: req, message: msg, headers: msg.response_headers);
+		public Response (Request req, Soup.Server soup_server, Message msg) {
+			Object (request:     req,
+			        soup_server: soup_server,
+			        message:     msg,
+			        headers:     msg.response_headers,
+			        body:        new MessageBodyOutputStream (soup_server, msg));
 		}
 
 		construct {
@@ -176,49 +187,10 @@ namespace VSGI.HTTP {
 		 * Implementation based on {@link Soup.Message} already handles the
 		 * writing of the headers.
 		 */
-		protected override bool write_headers (MessageHeaders headers, out size_t bytes_written, Cancellable? cancellable = null) {
-			bytes_written= 0;
+		protected override bool write_headers (MessageHeaders headers, out size_t bytes_written, Cancellable? cancellable = null) throws IOError {
+			bytes_written = 0;
+			soup_server.unpause_message (message);
 			return true;
-		}
-	}
-
-	private class Connection : IOStream {
-
-		public Soup.Server soup_server { construct; get; }
-
-		public Message message { construct; get; }
-
-		private InputStream _input_stream;
-
-		public override InputStream input_stream {
-			get {
-				return this._input_stream;
-			}
-		}
-
-		private OutputStream _output_stream;
-
-		public override OutputStream output_stream {
-			get {
-				return this._output_stream;
-			}
-		}
-
-		/**
-		 * {@inheritDoc}
-		 *
-		 * @param server  used to pause and unpause the message from and
-		 *                until the connection lives
-		 * @param message message wrapped to provide the IOStream
-		 */
-		public Connection (Soup.Server soup_server, Message message) {
-			Object (soup_server: soup_server, message: message);
-
-			this._input_stream  = new MemoryInputStream.from_data (message.request_body.flatten ().data, null);
-			this._output_stream = new MessageBodyOutputStream (soup_server, message);
-
-			// prevent the server from completing the message
-			soup_server.pause_message (message);
 		}
 	}
 
@@ -299,12 +271,13 @@ namespace VSGI.HTTP {
 
 			// register a catch-all handler
 			server.add_handler (null, (server, msg, path, query, client) => {
-				var connection = new Connection (server, msg);
-
 				msg.set_status (Status.OK);
 
-				var req = new Request (connection, msg, client, query);
-				var res = new Response (req, msg);
+				// prevent I/O as we handle everything asynchronously
+				server.pause_message (msg);
+
+				var req = new Request (msg, client, query);
+				var res = new Response (req, server, msg);
 
 				var auth = req.headers.get_one ("Authorization");
 				if (auth != null) {
