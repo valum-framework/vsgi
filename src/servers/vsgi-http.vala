@@ -65,7 +65,7 @@ namespace VSGI.HTTP {
 		 */
 		public override bool flush (Cancellable? cancellable = null) throws IOError {
 			if (unlikely (aborted)) {
-				throw new IOError.CONNECTION_CLOSED ("Request has been aborted.");
+				throw new IOError.FAILED ("Request has been aborted.");
 			}
 			server.unpause_message (message);
 			return true;
@@ -73,7 +73,7 @@ namespace VSGI.HTTP {
 
 		public override bool close (Cancellable? cancellable = null) throws IOError {
 			if (unlikely (aborted)) {
-				throw new IOError.CONNECTION_CLOSED ("Request has been aborted.");
+				throw new IOError.FAILED ("Request has been aborted.");
 			}
 			message.response_body.complete ();
 			return true;
