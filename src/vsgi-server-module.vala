@@ -57,7 +57,8 @@ public class VSGI.ServerModule : TypeModule {
 	}
 
 	construct {
-		path = Module.build_path (directory, "vsgi-%s".printf (name));
+		// trim the suffix from 'build_path'
+		path = Module.build_path (directory, "vsgi-%s".printf (name))[0:- Module.SUFFIX.length - 1];
 	}
 
 	public override bool load () {

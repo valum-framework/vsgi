@@ -20,5 +20,10 @@ class GiTest(unittest.TestCase):
         payload = req.get_connection().get_output_stream().steal_as_bytes().get_data()
         self.assertTrue(payload.endswith(b'Hello world!'))
 
+    def test_server(self):
+        server = VSGI.Server.new_with_handler('http', App())
+        server.listen()
+        self.assertTrue(len(server.get_uris()) > 0)
+
 if __name__ == '__main__':
     unittest.main()
