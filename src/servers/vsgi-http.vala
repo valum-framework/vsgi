@@ -30,7 +30,7 @@ namespace VSGI.HTTP {
 
 	private class MessageBodyOutputStream : OutputStream {
 
-		private bool aborted = false;
+		internal bool finished = false;
 
 		public Soup.Server server { construct; get; }
 
@@ -41,17 +41,11 @@ namespace VSGI.HTTP {
 		}
 
 		construct {
-			ulong aborted_id;
-			aborted_id = server.request_aborted.connect ((msg) => {
-				if (msg == message) {
-					aborted = true;
-					(server as Object).disconnect (aborted_id);
-				}
-			});
+			message.finished.connect (() => finished = true);
 		}
 
 		public override ssize_t write (uint8[] data, Cancellable? cancellable = null) throws IOError {
-			if (unlikely (aborted)) {
+			if (unlikely (finished)) {
 				// FIXME: throw a IOError here
 				return -1;
 			}
@@ -64,16 +58,16 @@ namespace VSGI.HTTP {
 		 * written chunks.
 		 */
 		public override bool flush (Cancellable? cancellable = null) throws IOError {
-			if (unlikely (aborted)) {
-				throw new IOError.FAILED ("Request has been aborted.");
+			if (finished) {
+				throw new IOError.CONNECTION_CLOSED ("Connection closed by peer.");
 			}
 			server.unpause_message (message);
 			return true;
 		}
 
 		public override bool close (Cancellable? cancellable = null) throws IOError {
-			if (unlikely (aborted)) {
-				throw new IOError.FAILED ("Request has been aborted.");
+			if (finished) {
+				throw new IOError.CONNECTION_CLOSED ("Connection closed by peer.");
 			}
 			message.response_body.complete ();
 			return true;
@@ -84,6 +78,8 @@ namespace VSGI.HTTP {
 	 * Soup Request
 	 */
 	private class Request : VSGI.Request {
+
+		private bool finished = false;
 
 		/**
 		 * Message underlying this request.
@@ -115,8 +111,15 @@ namespace VSGI.HTTP {
 			        body:              new MemoryInputStream.from_data (msg.request_body.data, null));
 		}
 
+		construct {
+			message.finished.connect (() => finished = true);
+		}
+
 #if SOUP_2_50
 		public override IOStream? steal_connection () {
+			if (finished) {
+				return null;
+			}
 			try {
 				return _client_context == null ? null : client_context.steal_connection ();
 			} finally {
@@ -130,6 +133,8 @@ namespace VSGI.HTTP {
 	 * Soup Response
 	 */
 	private class Response : VSGI.Response {
+
+		private bool finished = false;
 
 		public Soup.Server soup_server { construct; get; }
 
@@ -168,6 +173,9 @@ namespace VSGI.HTTP {
 			message.wrote_headers.connect (() => {
 				wrote_headers (headers);
 			});
+			message.finished.connect (() => {
+				finished = true;
+			});
 		}
 
 		/**
@@ -176,7 +184,10 @@ namespace VSGI.HTTP {
 		 * Implementation based on {@link Soup.Message} already handles the
 		 * writing of the status line.
 		 */
-		protected override bool write_status_line (HTTPVersion http_version, uint status, string reason_phrase, out size_t bytes_written, Cancellable? cancellable = null) {
+		protected override bool write_status_line (HTTPVersion http_version, uint status, string reason_phrase, out size_t bytes_written, Cancellable? cancellable = null) throws IOError {
+			if (finished) {
+				throw new IOError.CONNECTION_CLOSED ("Connection closed by peer.");
+			}
 			bytes_written = 0;
 			return true;
 		}
@@ -188,6 +199,9 @@ namespace VSGI.HTTP {
 		 * writing of the headers.
 		 */
 		protected override bool write_headers (MessageHeaders headers, out size_t bytes_written, Cancellable? cancellable = null) throws IOError {
+			if (finished) {
+				throw new IOError.CONNECTION_CLOSED ("Connection closed by peer.");
+			}
 			bytes_written = 0;
 			soup_server.unpause_message (message);
 			return true;
