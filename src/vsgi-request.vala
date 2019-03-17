@@ -290,7 +290,7 @@ namespace VSGI {
 				if (_form == null) {
 					if (headers.get_content_type (null) == "application/x-www-form-urlencoded") {
 						try {
-							_form = Soup.Form.decode (flatten_utf8 ());
+							_form = (HashTable<string,string>) Soup.Form.decode (flatten_utf8 ());
 						} catch (Error err) {
 							critical ("%s (%s, %d)", err.message, err.domain.to_string (), err.code);
 						}
@@ -373,13 +373,13 @@ namespace VSGI {
 			var query_string = Environ.get_variable (environment, "QUERY_STRING");
 			if (query_string != null && query_string.length > 0) {
 				uri.set_query (query_string);
-				_query = Soup.Form.decode (query_string);
+				_query = (HashTable<string,string>) Soup.Form.decode (query_string);
 			} else if (path_translated != null && "?" in path_translated) {
 				uri.set_query (path_translated.split ("?", 2)[1]);
-				_query = Soup.Form.decode (path_translated.split ("?", 2)[1]);
+				_query = (HashTable<string,string>) Soup.Form.decode (path_translated.split ("?", 2)[1]);
 			} else if (request_uri != null && "?" in request_uri) {
 				uri.set_query (request_uri.split ("?", 2)[1]);
-				_query = Soup.Form.decode (request_uri.split ("?", 2)[1]);
+				_query = (HashTable<string,string>) Soup.Form.decode (request_uri.split ("?", 2)[1]);
 			}
 
 			var content_type = Environ.get_variable (environment, "CONTENT_TYPE") ?? "application/octet-stream";
@@ -410,7 +410,7 @@ namespace VSGI {
 				_headers = new Soup.MessageHeaders (Soup.MessageHeadersType.REQUEST);
 			}
 			if (_query == null) {
-				_query = uri.get_query () == null ? null : Soup.Form.decode (uri.get_query ());
+				_query = uri.get_query () == null ? null : (HashTable<string,string>) Soup.Form.decode (uri.get_query ());
 			} else {
 				_uri.set_query_from_form (_query);
 			}

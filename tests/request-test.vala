@@ -79,9 +79,9 @@ public int main (string[] args) {
 
 	Test.add_func ("/request/lookup_query", () => {
 		assert (null == new Request (null, "GET", new Soup.URI ("http://localhost:3003/"), null).lookup_query ("a"));
-		assert (null == new Request (null, "GET", new Soup.URI ("http://localhost:3003/"), Soup.Form.decode ("b")).lookup_query ("a"));
-		assert (null == new Request (null, "GET", new Soup.URI ("http://localhost:3003/"), Soup.Form.decode ("a")).lookup_query ("a"));
-		assert ("b" == new Request (null, "GET", new Soup.URI ("http://localhost:3003/"), Soup.Form.decode ("a=b")).lookup_query ("a"));
+		assert (null == new Request (null, "GET", new Soup.URI ("http://localhost:3003/"), (HashTable<string,string>) Soup.Form.decode ("b")).lookup_query ("a"));
+		assert (null == new Request (null, "GET", new Soup.URI ("http://localhost:3003/"), (HashTable<string,string>) Soup.Form.decode ("a")).lookup_query ("a"));
+		assert ("b" == new Request (null, "GET", new Soup.URI ("http://localhost:3003/"), (HashTable<string,string>) Soup.Form.decode ("a=b")).lookup_query ("a"));
 	});
 
 	Test.add_func ("/request/steal_connection", () => {
