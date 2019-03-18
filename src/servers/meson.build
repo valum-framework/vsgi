@@ -8,8 +8,8 @@ shared_module('vsgi-cgi', 'vsgi-cgi.vala',
         install: true,
         install_dir: join_paths(get_option('libdir'), 'vsgi-@0@/servers'.format(api_version)))
 
-fcgi = meson.get_compiler('c').find_library('fcgi', required: false)
-if fcgi.found()
+if get_option('with_fcgi')
+    fcgi = meson.get_compiler('c').find_library('fcgi')
     fcgi_vapi = meson.get_compiler('vala').find_library('fcgi', dirs: meson.current_source_dir())
     vsgi_fastcgi_internal = meson.get_compiler('vala').find_library('vsgi-fastcgi-internal', dirs: meson.current_source_dir())
     shared_module('vsgi-fastcgi', ['vsgi-fastcgi.vala', 'vsgi-fastcgi-input-stream.c', 'vsgi-fastcgi-output-stream.c'],

@@ -17,7 +17,7 @@ foreach name : vsgi_tests
          env: ['G_TEST_SRCDIR=' + meson.current_source_dir()])
 endforeach
 
-if fcgi.found()
+if get_option('with_fcgi')
     test('fastcgi server', executable('fastcgi-server-test', 'fastcgi-server-test.vala',
                                       dependencies: [glib, gobject, gio, gio_unix, soup, vsgi_dep]))
 endif
