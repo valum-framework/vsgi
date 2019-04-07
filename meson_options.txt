@@ -1,1 +1,2 @@
 option('with_fcgi', type: 'boolean', value: false)
+option('with_introspection', type: 'boolean', value: false)
