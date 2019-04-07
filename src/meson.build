@@ -43,7 +43,7 @@ if get_option('with_introspection')
 endif
 
 pkgconfig = import('pkgconfig')
-pkgconfig.generate(libraries: vsgi_lib,
+pkgconfig.generate(vsgi_lib,
                    version: meson.project_version(),
                    name: 'VSGI',
                    filebase: 'vsgi-' + api_version,
