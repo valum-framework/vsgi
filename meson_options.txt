@@ -1,0 +1,1 @@
+option('with_fcgi', type: 'boolean', value: false)
