@@ -42,18 +42,8 @@ if g_ir_compiler.found()
                   install_dir: join_paths(get_option('libdir'), 'girepository-1.0'))
 endif
 
-vsgi_private_requires = ['gio-unix-2.0', 'gmodule-2.0']
-
-if libsystemd.found()
-    vsgi_private_requires += 'libsystemd'
-endif
-
-vsgi_private_requires += 'openssl'
-
 pkgconfig = import('pkgconfig')
-pkgconfig.generate(requires: 'glib-2.0 gobject-2.0 gio-2.0 libsoup-2.4',
-                   requires_private: vsgi_private_requires,
-                   libraries: vsgi_lib,
+pkgconfig.generate(libraries: vsgi_lib,
                    version: meson.project_version(),
                    name: 'VSGI',
                    filebase: 'vsgi-' + api_version,
