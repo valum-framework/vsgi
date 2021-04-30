@@ -15,7 +15,7 @@
  * along with Valum.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-using Soup;
+using GLib;
 
 /**
  * Cookie-related utilities.
@@ -38,7 +38,7 @@ namespace VSGI.CookieUtils {
 	 * @param key           secret used to sign the cookie name and value
 	 */
 	[Version (since = "0.3")]
-	public void sign (Cookie cookie, ChecksumType checksum_type, uint8[] key) {
+	public void sign (Soup.Cookie cookie, ChecksumType checksum_type, uint8[] key) {
 		var checksum = Hmac.compute_for_string (checksum_type,
 		                                        key,
 		                                        Hmac.compute_for_string (checksum_type, key, cookie.@value) + cookie.name);
@@ -60,7 +60,7 @@ namespace VSGI.CookieUtils {
 	 * @return              true if the cookie is signed by the secret
 	 */
 	[Version (since = "0.3")]
-	public bool verify (Cookie cookie, ChecksumType checksum_type, uint8[] key, out string? @value) {
+	public bool verify (Soup.Cookie cookie, ChecksumType checksum_type, uint8[] key, out string? @value) {
 		var checksum_length = Hmac.compute_for_string (checksum_type, key, "").length;
 
 		if (cookie.@value.length < checksum_length) {

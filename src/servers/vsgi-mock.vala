@@ -16,7 +16,6 @@
  */
 
 using GLib;
-using Soup;
 
 [ModuleInit]
 public Type server_init (TypeModule type_module) {

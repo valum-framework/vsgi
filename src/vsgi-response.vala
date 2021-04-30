@@ -16,7 +16,6 @@
  */
 
 using GLib;
-using Soup;
 
 namespace VSGI {
 	/**
@@ -47,23 +46,23 @@ namespace VSGI {
 		 * Response headers.
 		 */
 		[Version (since = "0.1")]
-		public MessageHeaders headers { get; construct; default = new Soup.MessageHeaders (MessageHeadersType.RESPONSE); }
+		public Soup.MessageHeaders headers { get; construct; default = new Soup.MessageHeaders (Soup.MessageHeadersType.RESPONSE); }
 
 		/**
 		 * Response cookies extracted from the 'Set-Cookie' header.
 		 */
 		[Version (since = "0.3")]
-		public SList<Cookie> cookies {
+		public SList<Soup.Cookie> cookies {
 			owned get {
-				var cookies     = new SList<Cookie> ();
+				var cookies     = new SList<Soup.Cookie> ();
 				var cookie_list = headers.get_list ("Set-Cookie");
 
 				if (cookie_list == null)
 					return cookies;
 
-				foreach (var cookie in header_parse_list (cookie_list))
+				foreach (var cookie in Soup.header_parse_list (cookie_list))
 					if (cookie != null)
-						cookies.prepend (Cookie.parse (cookie, request.uri));
+						cookies.prepend (Soup.Cookie.parse (cookie, request.uri));
 
 				cookies.reverse ();
 
@@ -133,7 +132,7 @@ namespace VSGI {
 
 		construct {
 			if (headers == null) {
-				_headers = new MessageHeaders (MessageHeadersType.RESPONSE);
+				_headers = new Soup.MessageHeaders (Soup.MessageHeadersType.RESPONSE);
 			}
 		}
 
@@ -141,11 +140,11 @@ namespace VSGI {
 		 * Send the status line to the client.
 		 */
 		[Version (since = "0.3")]
-		protected virtual bool write_status_line (HTTPVersion  http_version,
-		                                          uint         status,
-		                                          string       reason_phrase,
-		                                          out size_t   bytes_written,
-		                                          Cancellable? cancellable = null) throws IOError {
+		protected virtual bool write_status_line (Soup.HTTPVersion  http_version,
+		                                          uint              status,
+		                                          string            reason_phrase,
+		                                          out size_t        bytes_written,
+		                                          Cancellable?      cancellable = null) throws IOError {
 			if (request.is_cgi) {
 				return request.connection.output_stream.write_all ("Status: %u %s\r\n".printf (status, reason_phrase).data,
 				                                                   out bytes_written,
@@ -158,12 +157,12 @@ namespace VSGI {
 		}
 
 		[Version (since = "0.3")]
-		protected virtual async bool write_status_line_async (HTTPVersion  http_version,
-		                                                      uint         status,
-		                                                      string       reason_phrase,
-		                                                      int          priority    = GLib.Priority.DEFAULT,
-		                                                      Cancellable? cancellable = null,
-		                                                      out size_t   bytes_written) throws Error {
+		protected virtual async bool write_status_line_async (Soup.HTTPVersion  http_version,
+		                                                      uint              status,
+		                                                      string            reason_phrase,
+		                                                      int               priority    = GLib.Priority.DEFAULT,
+		                                                      Cancellable?      cancellable = null,
+		                                                      out size_t        bytes_written) throws Error {
 			return write_status_line (http_version, status, reason_phrase, out bytes_written, cancellable);
 		}
 
@@ -171,9 +170,9 @@ namespace VSGI {
 		 * Send headers to the client.
 		 */
 		[Version (since = "0.3")]
-		protected virtual bool write_headers (MessageHeaders headers,
-		                                       out size_t     bytes_written,
-		                                       Cancellable?   cancellable = null) throws IOError {
+		protected virtual bool write_headers (Soup.MessageHeaders headers,
+		                                      out size_t          bytes_written,
+		                                      Cancellable?        cancellable = null) throws IOError {
 			var head = new StringBuilder ();
 
 			// headers
@@ -188,10 +187,10 @@ namespace VSGI {
 		}
 
 		[Version (since = "0.3")]
-		protected virtual async bool write_headers_async (MessageHeaders headers,
-		                                                  int            priority    = GLib.Priority.DEFAULT,
-		                                                  Cancellable?   cancellable = null,
-		                                                  out size_t     bytes_written) throws Error {
+		protected virtual async bool write_headers_async (Soup.MessageHeaders headers,
+		                                                  int                 priority    = GLib.Priority.DEFAULT,
+		                                                  Cancellable?        cancellable = null,
+		                                                  out size_t          bytes_written) throws Error {
 			return write_headers (headers, out bytes_written, cancellable);
 		}
 
@@ -228,11 +227,11 @@ namespace VSGI {
 				try {
 					write_status_line (request.http_version,
 					                   status,
-					                   reason_phrase ?? Status.get_phrase (status),
+					                   reason_phrase ?? Soup.Status.get_phrase (status),
 					                   out bytes_written, cancellable);
-					wrote_status_line (status, reason_phrase ?? Status.get_phrase (status));
+					wrote_status_line (status, reason_phrase ?? Soup.Status.get_phrase (status));
 
-					var headers_copy = new MessageHeaders (MessageHeadersType.RESPONSE);
+					var headers_copy = new Soup.MessageHeaders (Soup.MessageHeadersType.RESPONSE);
 					headers.@foreach (headers_copy.append);
 
 					size_t headers_bytes_written;
@@ -259,13 +258,13 @@ namespace VSGI {
 				try {
 					yield write_status_line_async (request.http_version,
 					                               status,
-					                               reason_phrase ?? Status.get_phrase (status),
+					                               reason_phrase ?? Soup.Status.get_phrase (status),
 					                               priority,
 					                               cancellable,
 					                               out bytes_written);
-					wrote_status_line (status, reason_phrase ?? Status.get_phrase (status));
+					wrote_status_line (status, reason_phrase ?? Soup.Status.get_phrase (status));
 
-					var headers_copy = new MessageHeaders (MessageHeadersType.RESPONSE);
+					var headers_copy = new Soup.MessageHeaders (Soup.MessageHeadersType.RESPONSE);
 					headers.@foreach (headers_copy.append);
 
 					size_t headers_bytes_written;
