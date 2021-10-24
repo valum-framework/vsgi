@@ -14,7 +14,8 @@ vsgi_tests = [
 foreach name : vsgi_tests
     test(name, executable(name + '-test', name + '-test.vala',
                           dependencies: [glib, gobject, gio, gio_unix, soup, vsgi_dep]),
-         env: ['G_TEST_SRCDIR=' + meson.current_source_dir()])
+         env: ['G_TEST_SRCDIR=' + meson.current_source_dir(),
+               'VSGI_SERVER_PATH=' + join_paths(meson.current_build_dir(), '../src/servers')])
 endforeach
 
 if get_option('with_fcgi')
