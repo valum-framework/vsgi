@@ -34,4 +34,4 @@ if get_option('with_introspection')
          args: meson.current_source_dir() + '/gi-test.py' ,
          env: ['GI_TYPELIB_PATH=' + join_paths(meson.current_build_dir(), '../src'),
                'VSGI_SERVER_PATH=' + join_paths(meson.current_build_dir(), '../src/servers')])
- endif
+endif
