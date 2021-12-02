@@ -38,7 +38,6 @@ vsgi_lib = library('vsgi-' + api_version, vsgi_config, vsgi_sources,
                    dependencies: [glib, gobject, gio, gio_unix, gmodule, soup, libsystemd, openssl, posix],
                    vala_header: 'vsgi.h',
                    vala_gir: 'VSGI-@0@.gir'.format(api_version),
-                   build_rpath: join_paths(meson.current_build_dir(), 'servers'),
                    install: true,
                    install_dir: [true, 'include/vsgi-' + api_version, true, true])
 
