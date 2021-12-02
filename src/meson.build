@@ -31,10 +31,11 @@ vsgi_sources = files(
     'vsgi-server-module.vala',
     'vsgi-server.vala',
     'vsgi-socket-server.vala',
-    'vsgi-tee-output-stream.vala')
+    'vsgi-tee-output-stream.vala',
+    join_paths(meson.current_build_dir(), 'vsgi-config.vala'))
 
 
-vsgi_lib = library('vsgi-' + api_version, vsgi_config, vsgi_sources,
+vsgi_lib = library('vsgi-' + api_version, vsgi_sources,
                    dependencies: [glib, gobject, gio, gio_unix, gmodule, soup, libsystemd, openssl, posix],
                    vala_header: 'vsgi.h',
                    vala_gir: 'VSGI-@0@.gir'.format(api_version),
