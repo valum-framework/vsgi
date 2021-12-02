@@ -57,14 +57,20 @@ public class VSGI.ServerModule : TypeModule {
 	}
 
 	construct {
+		string module_file_name = "vsgi-%s".printf (name);
 		// trim the suffix from 'build_path'
-		path = Module.build_path (directory, "vsgi-%s".printf (name))[0:- Module.SUFFIX.length - 1];
+		path = Module.build_path (directory, module_file_name)[0:- Module.SUFFIX.length - 1];
+		File module_path = File.new_for_path (path);
+		if (!module_path.query_exists ()) {
+			path = Module.build_path (Config.MODULE_PATH_FALLBACK, module_file_name)[0:- Module.SUFFIX.length - 1];
+		}
 	}
 
 	public override bool load () {
 		module = Module.open (path, ModuleFlags.BIND_LAZY);
 
 		if (module == null) {
+			module = Path.build_path (Config.MODULE_PATH_FALLBACK, path);
 			critical (Module.error ());
 			return false;
 		}

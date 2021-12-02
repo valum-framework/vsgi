@@ -1,3 +1,14 @@
+conf_data = configuration_data()
+conf_data.set(
+    'MODULE_DIR',
+    join_paths(get_option('prefix'), get_option('libdir'), 'vsgi-@0@/servers'.format(api_version)))
+
+vsgi_config = configure_file(
+    input: 'vsgi-config.vala.in',
+    output: 'vsgi-config.vala',
+    configuration: conf_data
+)
+
 vsgi_sources = files(
     'vsgi.vala',
     'vsgi-application.vala',
@@ -17,15 +28,15 @@ vsgi_sources = files(
     'vsgi-server.vala',
     'vsgi-socket-server.vala',
     'vsgi-tee-output-stream.vala')
-vsgi_lib = library('vsgi-' + api_version, vsgi_sources,
+
+
+vsgi_lib = library('vsgi-' + api_version, vsgi_config, vsgi_sources,
                    dependencies: [glib, gobject, gio, gio_unix, gmodule, soup, libsystemd, openssl, posix],
                    vala_header: 'vsgi.h',
                    vala_gir: 'VSGI-@0@.gir'.format(api_version),
                    build_rpath: join_paths(meson.current_build_dir(), 'servers'),
-                   link_args: ['-Wl,--disable-new-dtags'],
                    install: true,
-                   install_dir: [true, 'include/vsgi-' + api_version, true, true],
-                   install_rpath: join_paths(get_option('prefix'), get_option('libdir'), 'vsgi-@0@/servers'.format(api_version)))
+                   install_dir: [true, 'include/vsgi-' + api_version, true, true])
 
 install_data('vsgi-@0@.deps'.format(api_version),
              install_dir: 'share/vala/vapi')
