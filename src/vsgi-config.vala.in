@@ -16,5 +16,5 @@
  */
 
 namespace VSGI.Config {
-	const string MODULE_PATH_FALLBACK = "@MODULE_DIR@";
+	public const string MODULE_PATH_FALLBACK = "@MODULE_DIR@";
 }
