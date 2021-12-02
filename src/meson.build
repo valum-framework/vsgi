@@ -1,13 +1,17 @@
 conf_data = configuration_data()
-conf_data.set(
-    'MODULE_DIR',
-    join_paths(get_option('prefix'), get_option('libdir'), 'vsgi-@0@/servers'.format(api_version)))
+module_dir = ''
+if get_option('buildtype') == 'debug'
+    module_dir = join_paths(meson.current_build_dir(), 'servers')
+else
+    module_dir = join_paths(get_option('prefix'), get_option('libdir'), 'vsgi-@0@/servers'.format(api_version))
+endif
+
+conf_data.set('MODULE_DIR', module_dir)
 
 vsgi_config = configure_file(
     input: 'vsgi-config.vala.in',
     output: 'vsgi-config.vala',
-    configuration: conf_data
-)
+    configuration: conf_data)
 
 vsgi_sources = files(
     'vsgi.vala',

@@ -70,7 +70,6 @@ public class VSGI.ServerModule : TypeModule {
 		module = Module.open (path, ModuleFlags.BIND_LAZY);
 
 		if (module == null) {
-			module = Path.build_path (Config.MODULE_PATH_FALLBACK, path);
 			critical (Module.error ());
 			return false;
 		}
