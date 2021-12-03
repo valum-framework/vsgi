@@ -58,10 +58,14 @@ public class VSGI.ServerModule : TypeModule {
 
 	construct {
 		string module_file_name = "vsgi-%s".printf (name);
-		// trim the suffix from 'build_path'
-		path = Module.build_path (directory, module_file_name)[0:- Module.SUFFIX.length - 1];
-		File module_path = File.new_for_path (path);
-		if (!module_path.query_exists ()) {
+		string module_path = Module.build_path (directory, module_file_name);
+		File module_file = File.new_for_path (module_path);
+
+		if (module_file.query_exists ()) {
+			// trim the suffix from 'build_path'
+			path = module_path[0:- Module.SUFFIX.length - 1];
+		} else {
+			// trim the suffix from 'build_path'
 			path = Module.build_path (Config.MODULE_PATH_FALLBACK, module_file_name)[0:- Module.SUFFIX.length - 1];
 		}
 	}
