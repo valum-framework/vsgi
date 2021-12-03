@@ -7,10 +7,10 @@ else
 endif
 
 conf_data.set('MODULE_DIR', module_dir)
-
+vsgi_config_name = 'vsgi-config.vala'
 vsgi_config = configure_file(
-    input: 'vsgi-config.vala.in',
-    output: 'vsgi-config.vala',
+    input: vsgi_config_name + '.in',
+    output: vsgi_config_name,
     configuration: conf_data)
 
 vsgi_sources = files(
@@ -32,7 +32,7 @@ vsgi_sources = files(
     'vsgi-server.vala',
     'vsgi-socket-server.vala',
     'vsgi-tee-output-stream.vala',
-    join_paths(meson.current_build_dir(), 'vsgi-config.vala'))
+    join_paths(meson.current_build_dir(), vsgi_config_name))
 
 
 vsgi_lib = library('vsgi-' + api_version, vsgi_sources,
