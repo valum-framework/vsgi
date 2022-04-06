@@ -61,7 +61,7 @@ public class VSGI.HandlerModule : TypeModule {
 	}
 
 	public override bool load () {
-		module = Module.open (path, ModuleFlags.BIND_LOCAL);
+		module = Module.open (path, ModuleFlags.LOCAL);
 
 		if (module == null) {
 			critical (Module.error ());
