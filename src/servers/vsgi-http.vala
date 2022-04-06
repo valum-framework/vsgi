@@ -115,7 +115,6 @@ namespace VSGI.HTTP {
 			message.finished.connect (() => finished = true);
 		}
 
-#if SOUP_2_50
 		public override IOStream? steal_connection () {
 			if (finished) {
 				return null;
@@ -126,7 +125,6 @@ namespace VSGI.HTTP {
 				_client_context = null;
 			}
 		}
-#endif
 	}
 
 	/**
@@ -214,12 +212,6 @@ namespace VSGI.HTTP {
 	[Version (since = "0.1")]
 	public class Server : VSGI.Server, Initable {
 
-#if !SOUP_2_48
-		[Version (since = "0.3")]
-		[Description (blurb = "The port the server is listening on")]
-		public Address @interface { construct; get; default = new Address.any (AddressFamily.IPV4, 3003); }
-#endif
-
 		[Version (since = "0.3")]
 		[Description (blurb = "Listen for HTTPS connections rather than plain HTTP")]
 		public bool https { construct; get; default = false; }
@@ -238,47 +230,21 @@ namespace VSGI.HTTP {
 
 		public override SList<URI> uris {
 			owned get {
-#if SOUP_2_48
 				return server.get_uris ();
-#else
-				var _uris = new SList<Soup.URI> ();
-
-				_uris.append (new Soup.URI ("%s://%s:%d/".printf (https ? "https" : "http",
-				                                                  @interface.physical,
-				                                                  @interface.port)));
-
-				return _uris;
-#endif
 			}
 		}
 
 		private Soup.Server server;
 
-#if SOUP_2_48
 		private ServerListenOptions server_listen_options = 0;
-#endif
-
-#if !SOUP_2_48
-		construct {
-			if (@interface == null) {
-				@interface = new Address.any (AddressFamily.IPV4, 3003);
-			}
-		}
-#endif
 
 		public bool init (Cancellable? cancellable = null) throws GLib.Error {
 			if (https) {
 				server = new Soup.Server (
-#if !SOUP_2_48
-					SERVER_INTERFACE,       @interface,
-#endif
 					SERVER_RAW_PATHS,       raw_paths,
 					SERVER_TLS_CERTIFICATE, tls_certificate);
 			} else {
 				server = new Soup.Server (
-#if !SOUP_2_48
-					SERVER_INTERFACE,       @interface,
-#endif
 					SERVER_RAW_PATHS,       raw_paths,
 					SERVER_TLS_CERTIFICATE, tls_certificate);
 			}
@@ -318,44 +284,26 @@ namespace VSGI.HTTP {
 			if (server_header != null)
 				server.server_header = server_header;
 
-#if SOUP_2_48
 			if (https)
 				server_listen_options |= ServerListenOptions.HTTPS;
-#else
-			server.run_async ();
-#endif
 
 			return true;
 		}
 
 		public override void listen (SocketAddress? address = null) throws GLib.Error {
-#if SOUP_2_48
 			if (address == null) {
 				server.listen_local (3003, server_listen_options);
 			} else {
 				server.listen (address, server_listen_options);
 			}
-#else
-			if (address != null) {
-				throw new IOError.NOT_SUPPORTED ("Prior to libsoup-2.4 (>=2.48), this implementation is only listening via the 'interface' property.");
-			}
-#endif
 		}
 
 		public override void listen_socket (GLib.Socket socket) throws GLib.Error {
-#if SOUP_2_48
 			server.listen_socket (socket, server_listen_options);
-#else
-			throw new IOError.NOT_SUPPORTED ("Prior to libsoup-2.4 (>=2.48), this implementation is only listening via the 'interface' property.");
-#endif
 		}
 
 		public override void stop () {
-#if SOUP_2_48
 			server.disconnect ();
-#else
-			server.quit ();
-#endif
 		}
 	}
 }

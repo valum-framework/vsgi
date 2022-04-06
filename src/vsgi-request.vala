@@ -19,23 +19,6 @@ using GLib;
 
 namespace VSGI {
 
-#if !GLIB_2_44
-	private class Connection : GLib.IOStream {
-
-		private InputStream _input_stream;
-		private OutputStream _output_stream;
-
-		public override InputStream input_stream { get { return this._input_stream; } }
-
-		public override OutputStream output_stream { get { return this._output_stream; } }
-
-		public Connection (InputStream input_stream, OutputStream output_stream) {
-			this._input_stream  = input_stream;
-			this._output_stream = output_stream;
-		}
-	}
-#endif
-
 	/**
 	 * Request representing a request of a resource.
 	 */
@@ -93,11 +76,7 @@ namespace VSGI {
 			}
 			construct {
 				if (value == null) {
-#if GIO_2_44
 					_connection = new SimpleIOStream (new MemoryInputStream (), new MemoryOutputStream.resizable ());
-#else
-					_connection = new Connection (new MemoryInputStream (), new MemoryOutputStream.resizable ());
-#endif
 				} else {
 					_connection = value;
 				}
