@@ -10,39 +10,14 @@ add_project_arguments(['--enable-experimental',
                        '--vapidir', join_paths(meson.current_source_dir(), 'vapi')],
                       language: 'vala')
 
-glib = dependency('glib-2.0', version: '>=2.40')
-gobject = dependency('gobject-2.0', version: '>=2.40')
-gio = dependency('gio-2.0', version: '>=2.40')
-gio_unix = dependency('gio-unix-2.0', version: '>=2.40')
+glib = dependency('glib-2.0', version: '>=2.56')
+gobject = dependency('gobject-2.0', version: '>=2.56')
+gio = dependency('gio-2.0', version: '>=2.56')
+gio_unix = dependency('gio-unix-2.0', version: '>=2.56')
 gmodule = dependency('gmodule-2.0', version: '>=2.40')
-soup = dependency('libsoup-2.4', version: '>=2.44')
-libsystemd = dependency('libsystemd', required: false)
+soup = dependency('libsoup-2.4', version: '>=2.62')
 openssl = dependency('openssl')
 posix = meson.get_compiler('vala').find_library('posix')
-
-# provide structured logging
-if glib.version().version_compare('>=2.50')
-    add_project_arguments('--define=GLIB_2_50', language: 'vala')
-endif
-
-# provide 'OutputStream.write_all_async' and 'SimpleIOStream'
-if gio.version().version_compare('>=2.44')
-    add_project_arguments('--define=GIO_2_44', language: 'vala')
-endif
-
-# new 'Soup.Server' API
-if soup.version().version_compare('>=2.48')
-    add_project_arguments('--define=SOUP_2_48', language: 'vala')
-endif
-
-# 'Soup.ClientContext.steal_connection'
-if soup.version().version_compare('>=2.50')
-    add_project_arguments('--define=SOUP_2_50', language: 'vala')
-endif
-
-if libsystemd.found()
-    add_project_arguments('--define=LIBSYSTEMD', language: 'vala')
-endif
 
 if meson.get_compiler('c').has_function('memmem')
     add_project_arguments('--define=HAVE_MEMMEM', language: 'vala')
