@@ -41,9 +41,9 @@ namespace VSGI.CookieUtils {
 	public void sign (Soup.Cookie cookie, ChecksumType checksum_type, uint8[] key) {
 		var checksum = Hmac.compute_for_string (checksum_type,
 		                                        key,
-		                                        Hmac.compute_for_string (checksum_type, key, cookie.@value) + cookie.name);
+		                                        Hmac.compute_for_string (checksum_type, key, cookie.get_value ()) + cookie.get_name ());
 
-		cookie.set_value (checksum + cookie.@value);
+		cookie.set_value (checksum + cookie.get_value ());
 	}
 
 	/**
@@ -63,19 +63,19 @@ namespace VSGI.CookieUtils {
 	public bool verify (Soup.Cookie cookie, ChecksumType checksum_type, uint8[] key, out string? @value) {
 		var checksum_length = Hmac.compute_for_string (checksum_type, key, "").length;
 
-		if (cookie.@value.length < checksum_length) {
+		if (cookie.get_value ().length < checksum_length) {
 			@value = null;
 			return false;
 		}
 
 		var checksum = Hmac.compute_for_string (checksum_type,
 		                                        key,
-		                                        Hmac.compute_for_string (checksum_type, key, cookie.@value.substring (checksum_length)) + cookie.name);
+		                                        Hmac.compute_for_string (checksum_type, key, cookie.get_value ().substring (checksum_length)) + cookie.get_name ());
 
 		assert (checksum_length == checksum.length);
 
-		if (OpenSSL.Crypto.memcmp (checksum, cookie.@value, checksum_length) == 0) {
-			@value = cookie.@value.substring (checksum_length);
+		if (OpenSSL.Crypto.memcmp (checksum, cookie.get_value (), checksum_length) == 0) {
+			@value = cookie.get_value ().substring (checksum_length);
 			return true;
 		} else {
 			@value = null;

@@ -37,13 +37,13 @@ public class VSGI.BasicAuthentication : Authentication {
 			return false;
 		}
 
-		if (!Soup.str_case_equal (header.slice (0, 5), "Basic")) {
+		if (!str_case_equal (header.slice (0, 5), "Basic")) {
 			return false;
 		}
 
 		var authorization_data = (string) Base64.decode (header.substring (6));
 
-		if (charset != null && !Soup.str_case_equal (charset, "UTF-8")) {
+		if (charset != null && !str_case_equal (charset, "UTF-8")) {
 			try {
 				authorization_data = convert (authorization_data, authorization_data.length, "UTF-8", charset);
 			} catch (ConvertError err) {

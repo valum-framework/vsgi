@@ -102,7 +102,7 @@ namespace VSGI {
 		 * URIs this server is listening on.
 		 */
 		[Version (since = "0.3")]
-		public abstract SList<Soup.URI> uris { owned get; }
+		public abstract SList<Uri> uris { owned get; }
 
 		/**
 		 * Prepare the server for listening on the provided socket address.

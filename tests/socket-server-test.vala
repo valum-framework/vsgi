@@ -40,8 +40,8 @@ public int main (string[] args) {
 			assert_not_reached ();
 		}
 
-		assert (server.uris.data.to_string (false).has_prefix ("mock://0.0.0.0:"));
-		assert (server.uris.next.data.to_string (false).has_prefix ("mock://[::]:"));
+		assert (server.uris.data.to_string ().has_prefix ("mock://0.0.0.0:"));
+		assert (server.uris.next.data.to_string ().has_prefix ("mock://[::]:"));
 	});
 
 	Test.add_func ("/socket_server/listen/default", () => {
@@ -69,7 +69,7 @@ public int main (string[] args) {
 			FileUtils.unlink ("some-socket.sock");
 		}
 
-		assert ("mock+unix://some-socket.sock/" == server.uris.data.to_string (false));
+		assert ("mock+unix://some-socket.sock/" == server.uris.data.to_string ());
 	});
 
 	Test.add_func ("/socket_server/listen_socket", () => {
@@ -78,7 +78,7 @@ public int main (string[] args) {
 		try {
 			var socket = new Socket (SocketFamily.UNIX, SocketType.STREAM, SocketProtocol.DEFAULT);
 			server.listen_socket (socket);
-			assert ("mock+fd://%d/".printf (socket.fd) == server.uris.data.to_string (false));
+			assert ("mock+fd://%d/".printf (socket.fd) == server.uris.data.to_string ());
 		} catch (Error err) {
 			assert_not_reached ();
 		} finally {
