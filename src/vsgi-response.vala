@@ -47,7 +47,7 @@ namespace VSGI {
 		 * Response headers.
 		 */
 		[Version (since = "0.1")]
-		public MessageHeaders headers { get; construct; default = new Soup.MessageHeaders (Soup.MessageHeadersType.RESPONSE); }
+		public MessageHeaders headers { get; construct; default = new Soup.MessageHeaders (MessageHeadersType.RESPONSE); }
 
 		/**
 		 * Response cookies extracted from the 'Set-Cookie' header.
@@ -133,7 +133,7 @@ namespace VSGI {
 
 		construct {
 			if (headers == null) {
-				_headers = new MessageHeaders (MessageHeadersType.REQUEST);
+				_headers = new MessageHeaders (MessageHeadersType.RESPONSE);
 			}
 		}
 
@@ -232,7 +232,7 @@ namespace VSGI {
 					                   out bytes_written, cancellable);
 					wrote_status_line (status, reason_phrase ?? Status.get_phrase (status));
 
-					var headers_copy = new MessageHeaders (MessageHeadersType.REQUEST);
+					var headers_copy = new MessageHeaders (MessageHeadersType.RESPONSE);
 					headers.@foreach (headers_copy.append);
 
 					size_t headers_bytes_written;
@@ -265,7 +265,7 @@ namespace VSGI {
 					                               out bytes_written);
 					wrote_status_line (status, reason_phrase ?? Status.get_phrase (status));
 
-					var headers_copy = new MessageHeaders (MessageHeadersType.REQUEST);
+					var headers_copy = new MessageHeaders (MessageHeadersType.RESPONSE);
 					headers.@foreach (headers_copy.append);
 
 					size_t headers_bytes_written;
