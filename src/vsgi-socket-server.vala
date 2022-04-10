@@ -28,18 +28,19 @@ public abstract class VSGI.SocketServer : Server {
 	public int backlog { construct; get; default = 10; }
 
 	/**
-	 * Scheme used for generated listening {@link Soup.URI}.
+	 * Scheme used for generated listening {@link Uri}.
 	 */
 	[Version (since = "0.3")]
 	protected abstract string scheme { get; }
 
-	private SList<Soup.URI> _uris = new SList<Soup.URI> ();
+	private SList<Uri> _uris = new SList<Uri> ();
 
-	public override SList<Soup.URI> uris {
+	public override SList<Uri> uris {
 		owned get {
-			var copy_uris = new SList<Soup.URI> ();
+			var copy_uris = new SList<Uri> ();
 			foreach (var uri in _uris) {
-				copy_uris.append (uri.copy ());
+				// no need to copy the URI itself since it is immutable
+				copy_uris.append (uri);
 			}
 			return copy_uris;
 		}
@@ -63,27 +64,37 @@ public abstract class VSGI.SocketServer : Server {
 			                            SocketProtocol.DEFAULT,
 			                            null,
 			                            out effective_address);
+			string scheme;
+			string? host;
+			string path;
+			int port;
 			if (effective_address is InetSocketAddress) {
 				var effective_inet_address = effective_address as InetSocketAddress;
 				if (effective_inet_address.get_family () == SocketFamily.IPV4) {
-					_uris.append (new Soup.URI ("%s://%s:%u/".printf (scheme,
-					                                                  effective_inet_address.get_address ().to_string (),
-					                                                  effective_inet_address.get_port ())));
+					scheme = "ipv4";
 				} else if (effective_inet_address.get_family () == SocketFamily.IPV6) {
-					_uris.append (new Soup.URI ("%s://[%s]:%u/".printf (scheme,
-					                                                    effective_inet_address.get_address ().to_string (),
-					                                                    effective_inet_address.get_port ())));
+					scheme = "ipv6";
 				}
+				scheme = this.scheme;
+				host = effective_inet_address.get_address ().to_string ();
+				path = "/";
+				port = effective_inet_address.get_port ();
 			} else if (effective_address is UnixSocketAddress) {
 				var effective_unix_address = effective_address as UnixSocketAddress;
-				_uris.append (new Soup.URI ("%s+unix://%s/".printf (scheme, effective_unix_address.get_path ())));
+				scheme = this.scheme + "+unix";
+				host = null;
+				path = effective_unix_address.get_path ();
+				port = 0;
+			} else {
+				assert_not_reached ();
 			}
+			_uris.append (Uri.build (UriFlags.NONE, scheme, null, host, port, path, null, null));
 		}
 	}
 
 	public override void listen_socket (Socket socket) throws Error {
 		socket_service.add_socket (socket, null);
-		_uris.append (new Soup.URI ("%s+fd://%d/".printf (scheme, socket.get_fd ())));
+		_uris.append (Uri.build (UriFlags.NONE, scheme + "+fd", null, null, 0, socket.get_fd ().to_string (), null, null));
 	}
 
 	public override void stop () {

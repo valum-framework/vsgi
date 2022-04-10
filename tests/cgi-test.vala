@@ -44,7 +44,7 @@ int main (string[] args) {
 		assert ("root" == request.uri.get_user ());
 		assert ("0.0.0.0" == request.uri.get_host ());
 		assert ("a=b" == request.uri.get_query ());
-		assert ("http://root@0.0.0.0:3003/?a=b" == request.uri.to_string (false));
+		assert ("http://root@0.0.0.0:3003/?a=b" == request.uri.to_string ());
 		assert (request.query.contains ("a"));
 		assert ("b" == request.query["a"]);
 		assert (3003 == request.uri.get_port ());
@@ -119,7 +119,7 @@ int main (string[] args) {
 
 		var request = new Request.from_cgi_environment (null, environment);
 
-		assert ("https" == request.uri.scheme);
+		assert ("https" == request.uri.get_scheme ());
 	});
 
 	/**
@@ -137,7 +137,7 @@ int main (string[] args) {
 
 		var request    = new Request.from_cgi_environment (null, environment);
 
-		assert ("https" == request.uri.scheme);
+		assert ("https" == request.uri.get_scheme ());
 	});
 
 	/**
@@ -155,7 +155,7 @@ int main (string[] args) {
 		var request    = new Request.from_cgi_environment (null, environment);
 
 		assert ("GET" == request.method);
-		assert ("/home" == request.uri.path);
+		assert ("/home" == request.uri.get_path ());
 		assert ("a" in request.query);
 		assert ("b" == request.query["a"]);
 	});
@@ -174,7 +174,7 @@ int main (string[] args) {
 
 		var request    = new Request.from_cgi_environment (null, environment);
 
-		assert ("/home" == request.uri.path);
+		assert ("/home" == request.uri.get_path ());
 	});
 
 	/**

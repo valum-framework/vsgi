@@ -24,7 +24,7 @@ public int main (string[] args) {
 	 * @since 0.1
 	 */
 	Test.add_func ("/cookies/from_request", () => {
-		var req = new Request (null, "GET", new Soup.URI ("http://localhost/"));
+		var req = new Request (null, "GET", Uri.parse ("http://localhost/", UriFlags.NONE));
 
 		req.headers.append ("Cookie", "a=b, c=d");
 		req.headers.append ("Cookie", "e=f");
@@ -33,21 +33,21 @@ public int main (string[] args) {
 
 		assert (3 == cookies.length ());
 
-		assert ("a" == cookies.data.name);
-		assert ("b" == cookies.data.value);
+		assert ("a" == cookies.data.get_name ());
+		assert ("b" == cookies.data.get_value ());
 
-		assert ("c" == cookies.next.data.name);
-		assert ("d" == cookies.next.data.value);
+		assert ("c" == cookies.next.data.get_name ());
+		assert ("d" == cookies.next.data.get_value ());
 
-		assert ("e" == cookies.next.next.data.name);
-		assert ("f" == cookies.next.next.data.value);
+		assert ("e" == cookies.next.next.data.get_name ());
+		assert ("f" == cookies.next.next.data.get_value ());
 	});
 
 	/**
 	 * @since 0.1
 	 */
 	Test.add_func ("/cookies/from_response", () => {
-		var req = new Request (null, "GET", new Soup.URI ("http://localhost/"));
+		var req = new Request (null, "GET", Uri.parse ("http://localhost/", UriFlags.NONE));
 		var res = new Response (req);
 
 		res.headers.append ("Set-Cookie", "a=b, c=d");
@@ -57,21 +57,21 @@ public int main (string[] args) {
 
 		assert (3 == cookies.length ());
 
-		assert ("a" == cookies.data.name);
-		assert ("b" == cookies.data.value);
+		assert ("a" == cookies.data.get_name ());
+		assert ("b" == cookies.data.get_value ());
 
-		assert ("c" == cookies.next.data.name);
-		assert ("d" == cookies.next.data.value);
+		assert ("c" == cookies.next.data.get_name ());
+		assert ("d" == cookies.next.data.get_value ());
 
-		assert ("e" == cookies.next.next.data.name);
-		assert ("f" == cookies.next.next.data.value);
+		assert ("e" == cookies.next.next.data.get_name ());
+		assert ("f" == cookies.next.next.data.get_value ());
 	});
 
 	/**
 	 * @since 0.2
 	 */
 	Test.add_func ("/cookies/lookup", () => {
-		var req = new Request (null, "GET", new Soup.URI ("http://localhost/"));
+		var req = new Request (null, "GET", Uri.parse ("http://localhost/", UriFlags.NONE));
 
 		req.headers.append ("Cookie", "a=b");
 		req.headers.append ("Cookie", "a=c"); // override
@@ -80,8 +80,8 @@ public int main (string[] args) {
 
 		var cookie = req.lookup_cookie ("a");
 
-		assert ("a" == cookie.name);
-		assert ("c" == cookie.value);
+		assert ("a" == cookie.get_name ());
+		assert ("c" == cookie.get_value ());
 	});
 
 	/**
@@ -92,7 +92,7 @@ public int main (string[] args) {
 
 		VSGI.CookieUtils.sign (cookie, ChecksumType.SHA256, "secret".data);
 
-		assert ("5d5305a844da2aa20b85bccd0067abf794ff439a9749c17527d8d9f7c2a6cf87value" == cookie.@value);
+		assert ("5d5305a844da2aa20b85bccd0067abf794ff439a9749c17527d8d9f7c2a6cf87value" == cookie.get_value ());
 	});
 
 	/**
@@ -102,7 +102,7 @@ public int main (string[] args) {
 		var cookie    = new Soup.Cookie ("name", "", "0.0.0.0", "/", 3600);
 		VSGI.CookieUtils.sign (cookie, ChecksumType.SHA256, "secret".data);
 
-		assert ("d6c8fc143254f1f9135210d09f6058414bbec029cc267f1e9c5e70da347eb3e9" == cookie.@value);
+		assert ("d6c8fc143254f1f9135210d09f6058414bbec029cc267f1e9c5e70da347eb3e9" == cookie.get_value ());
 	});
 
 	/**

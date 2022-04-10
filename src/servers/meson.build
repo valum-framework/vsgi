@@ -1,5 +1,6 @@
 shared_module('vsgi-http', ['vsgi-http.vala'],
         dependencies: [glib, gobject, gio, soup, vsgi_dep],
+        vala_args: ['--vapi', vsgi_internal_vapi],
         install: true,
         install_dir: join_paths(get_option('libdir'), 'vsgi-@0@/servers'.format(api_version)))
 

@@ -33,9 +33,9 @@ namespace VSGI.HTTP {
 
 		public Soup.Server server { construct; get; }
 
-		public Soup.Message message { construct; get; }
+		public Soup.ServerMessage message { construct; get; }
 
-		public MessageBodyOutputStream (Soup.Server server, Soup.Message message) {
+		public MessageBodyOutputStream (Soup.Server server, Soup.ServerMessage message) {
 			Object (server: server, message: message);
 		}
 
@@ -48,12 +48,12 @@ namespace VSGI.HTTP {
 				// FIXME: throw a IOError here
 				return -1;
 			}
-			message.response_body.append_take (data);
+			message.get_response_body ().append_take (data);
 			return data.length;
 		}
 
 		/**
-		 * Resume I/O on the underlying {@link Soup.Message} to flush the
+		 * Resume I/O on the underlying {@link Soup.ServerMessage} to flush the
 		 * written chunks.
 		 */
 		public override bool flush (Cancellable? cancellable = null) throws IOError {
@@ -68,7 +68,7 @@ namespace VSGI.HTTP {
 			if (finished) {
 				throw new IOError.CONNECTION_CLOSED ("Connection closed by peer.");
 			}
-			message.response_body.complete ();
+			message.get_response_body ().complete ();
 			return true;
 		}
 	}
@@ -83,9 +83,7 @@ namespace VSGI.HTTP {
 		/**
 		 * Message underlying this request.
 		 */
-		public Soup.Message message { construct; get; }
-
-		public Soup.ClientContext client_context { construct; get; }
+		public Soup.ServerMessage message { construct; get; }
 
 		/**
 		 * {@inheritDoc}
@@ -96,18 +94,16 @@ namespace VSGI.HTTP {
 		 * @param msg        message underlying this request
 		 * @param query      parsed HTTP query provided by {@link Soup.ServerCallback}
 		 */
-		public Request (Soup.Message               msg,
-		                Soup.ClientContext         client_context,
+		public Request (Soup.ServerMessage         msg,
 		                HashTable<string, string>? query) {
 			Object (message:           msg,
-			        client_context:    client_context,
-			        http_version:      msg.http_version,
+			        http_version:      msg.get_http_version (),
 			        gateway_interface: "HTTP/1.1",
-			        method:            msg.method,
-			        uri:               msg.uri,
+			        method:            msg.get_method (),
+			        uri:               msg.get_uri (),
 			        query:             query,
-			        headers:           msg.request_headers,
-			        body:              new MemoryInputStream.from_data (msg.request_body.data, null));
+			        headers:           msg.get_request_headers (),
+			        body:              new MemoryInputStream.from_data (msg.get_request_body ().data, null));
 		}
 
 		construct {
@@ -119,9 +115,9 @@ namespace VSGI.HTTP {
 				return null;
 			}
 			try {
-				return _client_context == null ? null : client_context.steal_connection ();
+				return _message == null ? null : message.steal_connection ();
 			} finally {
-				_client_context = null;
+				_message = null;
 			}
 		}
 	}
@@ -138,16 +134,16 @@ namespace VSGI.HTTP {
 		/**
 		 * Message underlying this response.
 		 */
-		public Soup.Message message { construct; get; }
+		public Soup.ServerMessage message { construct; get; }
 
 		public override uint status {
-			get { return this.message.status_code; }
-			set { this.message.status_code = value; }
+			get { return this.message.get_status (); }
+			set { this.message.set_status (value, null); }
 		}
 
 		public override string? reason_phrase {
-			owned get { return this.message.reason_phrase == "Unknown Error" ? null : this.message.reason_phrase; }
-			set { this.message.reason_phrase = value ?? Soup.Status.get_phrase (this.message.status_code); }
+			owned get { return this.message.get_reason_phrase () == "Unknown Error" ? null : this.message.get_reason_phrase (); }
+			set { this.message.set_status (this.message.get_status (), value ?? Soup.Status.get_phrase (this.message.get_status ())); }
 		}
 
 		/**
@@ -155,11 +151,11 @@ namespace VSGI.HTTP {
 		 *
 		 * @param msg message underlying this response
 		 */
-		public Response (Request req, Soup.Server soup_server, Soup.Message msg) {
+		public Response (Request req, Soup.Server soup_server, Soup.ServerMessage msg) {
 			Object (request:     req,
 			        soup_server: soup_server,
 			        message:     msg,
-			        headers:     msg.response_headers,
+			        headers:     msg.get_response_headers (),
 			        body:        new MessageBodyOutputStream (soup_server, msg));
 		}
 
@@ -178,7 +174,7 @@ namespace VSGI.HTTP {
 		/**
 		 * {@inheritDoc}
 		 *
-		 * Implementation based on {@link Soup.Message} already handles the
+		 * Implementation based on {@link Soup.ServerMessage} already handles the
 		 * writing of the status line.
 		 */
 		protected override bool write_status_line (Soup.HTTPVersion http_version, uint status, string reason_phrase, out size_t bytes_written, Cancellable? cancellable = null) throws IOError {
@@ -192,7 +188,7 @@ namespace VSGI.HTTP {
 		/**
 		 * {@inheritDoc}
 		 *
-		 * Implementation based on {@link Soup.Message} already handles the
+		 * Implementation based on {@link Soup.ServerMessage} already handles the
 		 * writing of the headers.
 		 */
 		protected override bool write_headers (Soup.MessageHeaders headers, out size_t bytes_written, Cancellable? cancellable = null) throws IOError {
@@ -227,7 +223,7 @@ namespace VSGI.HTTP {
 		[Description (blurb = "Percent-encoding in the Request-URI path will not be automatically decoded")]
 		public bool raw_paths { construct; get; default = false; }
 
-		public override SList<Soup.URI> uris {
+		public override SList<Uri> uris {
 			owned get {
 				return server.get_uris ();
 			}
@@ -240,36 +236,34 @@ namespace VSGI.HTTP {
 		public bool init (Cancellable? cancellable = null) throws GLib.Error {
 			if (https) {
 				server = new Soup.Server (
-					Soup.SERVER_RAW_PATHS,       raw_paths,
-					Soup.SERVER_TLS_CERTIFICATE, tls_certificate);
+					"raw-paths", raw_paths,
+					"tls-certificate", tls_certificate);
 			} else {
-				server = new Soup.Server (
-					Soup.SERVER_RAW_PATHS,       raw_paths,
-					Soup.SERVER_TLS_CERTIFICATE, tls_certificate);
+				server = new Soup.Server ("raw-paths", raw_paths);
 			}
 
 			// register a catch-all handler
-			server.add_handler (null, (server, msg, path, query, client) => {
-				msg.set_status (Soup.Status.OK);
+			server.add_handler (null, (server, msg, path, query) => {
+				msg.set_status (Soup.Status.OK, null);
 
 				// prevent I/O as we handle everything asynchronously
 				server.pause_message (msg);
 
-				var req = new Request (msg, client, query);
+				var req = new Request (msg, query);
 				var res = new Response (req, server, msg);
 
 				var auth = req.headers.get_one ("Authorization");
-				if (auth != null) {
-					if (Soup.str_case_equal (auth.slice (0, 6), "Basic ")) {
-						var auth_data = (string) Base64.decode (auth.substring (6));
-						if (auth_data.index_of_char (':') != -1) {
-							req.uri.set_user (auth_data.slice (0, auth.index_of_char (':')));
-						}
-					} else if (Soup.str_case_equal (auth.slice (0, 7), "Digest ")) {
-						var auth_data = Soup.header_parse_param_list (auth.substring (7));
-						req.uri.set_user (auth_data["username"]);
-					}
-				}
+				// if (auth != null) {
+				// 	if (VSGI.str_case_equal (auth.slice (0, 6), "Basic ")) {
+				// 		var auth_data = (string) Base64.decode (auth.substring (6));
+				// 		if (auth_data.index_of_char (':') != -1) {
+				// 			req.uri.set_user (auth_data.slice (0, auth.index_of_char (':')));
+				// 		}
+				// 	} else if (VSGI.str_case_equal (auth.slice (0, 7), "Digest ")) {
+				// 		var auth_data = Soup.header_parse_param_list (auth.substring (7));
+				// 		req.uri.set_user (auth_data["username"]);
+				// 	}
+				// }
 
 				handler.handle_async.begin (req, res, (obj, result) => {
 					try {

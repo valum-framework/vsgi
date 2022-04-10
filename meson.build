@@ -15,7 +15,7 @@ gobject = dependency('gobject-2.0', version: '>=2.56')
 gio = dependency('gio-2.0', version: '>=2.56')
 gio_unix = dependency('gio-unix-2.0', version: '>=2.56')
 gmodule = dependency('gmodule-2.0', version: '>=2.40')
-soup = dependency('libsoup-2.4', version: '>=2.62')
+soup = dependency('libsoup-3.0')
 openssl = dependency('openssl')
 posix = meson.get_compiler('vala').find_library('posix')
 

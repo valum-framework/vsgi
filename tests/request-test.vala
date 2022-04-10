@@ -22,7 +22,7 @@ public int main (string[] args) {
 	Test.init (ref args);
 
 	Test.add_func ("/request/fill_query_from_uri", () => {
-		var req = new Request (null, "GET", new Soup.URI ("http://localhost/?a=b"));
+		var req = new Request (null, "GET", Uri.parse ("http://localhost/?a=b", UriFlags.NONE));
 
 		assert (req.query.contains ("a"));
 		assert ("b" == req.query["a"]);
@@ -31,13 +31,13 @@ public int main (string[] args) {
 	Test.add_func ("/request/fill_uri_from_query", () => {
 		var query = new HashTable<string, string> (str_hash, str_equal);
 		query.insert ("a", "b");
-		var req = new Request (null, "GET", new Soup.URI ("http://localhost/"), query);
+		var req = new Request (null, "GET", Uri.parse ("http://localhost/", UriFlags.NONE), query);
 
 		assert ("a=b" == req.uri.get_query ());
 	});
 
 	Test.add_func ("/request/convert/new_content_length", () => {
-		var req = new Request (null, "get", new Soup.URI ("http://localhost/"));
+		var req = new Request (null, "get", Uri.parse ("http://localhost/", UriFlags.NONE));
 
 		req.headers.set_content_length (50);
 
@@ -47,7 +47,7 @@ public int main (string[] args) {
 	});
 
 	Test.add_func ("/request/convert/eof_to_fixed_size", () => {
-		var req = new Request (null, "get", new Soup.URI ("http://localhost/"));
+		var req = new Request (null, "get", Uri.parse ("http://localhost/", UriFlags.NONE));
 
 		req.headers.set_encoding (Soup.Encoding.EOF);
 
@@ -57,7 +57,7 @@ public int main (string[] args) {
 	});
 
 	Test.add_func ("/request/convert/complete_sink", () => {
-		var req = new Request (null, "get", new Soup.URI ("http://localhost/"));
+		var req = new Request (null, "get", Uri.parse ("http://localhost/", UriFlags.NONE));
 
 		req.headers.set_content_length (50);
 
@@ -68,7 +68,7 @@ public int main (string[] args) {
 	});
 
 	Test.add_func ("/request/convert/chunked", () => {
-		var req = new Request (null, "get", new Soup.URI ("http://localhost/"));
+		var req = new Request (null, "get", Uri.parse ("http://localhost/", UriFlags.NONE));
 
 		req.headers.set_encoding (Soup.Encoding.CHUNKED);
 
@@ -78,14 +78,14 @@ public int main (string[] args) {
 	});
 
 	Test.add_func ("/request/lookup_query", () => {
-		assert (null == new Request (null, "GET", new Soup.URI ("http://localhost:3003/"), null).lookup_query ("a"));
-		assert (null == new Request (null, "GET", new Soup.URI ("http://localhost:3003/"), (HashTable<string,string>) Soup.Form.decode ("b")).lookup_query ("a"));
-		assert (null == new Request (null, "GET", new Soup.URI ("http://localhost:3003/"), (HashTable<string,string>) Soup.Form.decode ("a")).lookup_query ("a"));
-		assert ("b" == new Request (null, "GET", new Soup.URI ("http://localhost:3003/"), (HashTable<string,string>) Soup.Form.decode ("a=b")).lookup_query ("a"));
+		assert (null == new Request (null, "GET", Uri.parse ("http://localhost:3003/", UriFlags.NONE), null).lookup_query ("a"));
+		assert (null == new Request (null, "GET", Uri.parse ("http://localhost:3003/", UriFlags.NONE), (HashTable<string,string>) Soup.Form.decode ("b")).lookup_query ("a"));
+		assert (null == new Request (null, "GET", Uri.parse ("http://localhost:3003/", UriFlags.NONE), (HashTable<string,string>) Soup.Form.decode ("a")).lookup_query ("a"));
+		assert ("b" == new Request (null, "GET", Uri.parse ("http://localhost:3003/", UriFlags.NONE), (HashTable<string,string>) Soup.Form.decode ("a=b")).lookup_query ("a"));
 	});
 
 	Test.add_func ("/request/steal_connection", () => {
-		var req = new Request (null, "GET", new Soup.URI ("http://localhost:3003/"), null);
+		var req = new Request (null, "GET", Uri.parse ("http://localhost:3003/", UriFlags.NONE), null);
 		assert (req.connection != null);
 		IOStream conn = req.steal_connection ();
 		assert (conn != null);

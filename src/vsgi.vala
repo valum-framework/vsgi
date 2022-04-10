@@ -33,4 +33,11 @@ namespace VSGI {
 	[Version (since = "0.3")]
 	[CCode (has_target = false)]
 	public delegate Type ServerInitFunc (TypeModule module);
+
+	/**
+	 * Replacement for what used to be Soup.str_case_equal but was removed in libsoup-3.
+	 */
+	internal bool str_case_equal (string s1, string s2) {
+		return s1.down() == s2.down();
+	}
 }

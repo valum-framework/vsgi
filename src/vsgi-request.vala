@@ -121,6 +121,14 @@ namespace VSGI {
 		[Version (since = "0.1")]
 		public string method { get; construct; default = "GET"; }
 
+		/* all the necessary for building the URI during the construct phase if unset */
+		private string? _uri_scheme;
+		private string? _uri_userinfo;
+		private string? _uri_host;
+		private int _uri_port;
+		private string? _uri_path_encoded;
+		private string? _uri_query;
+
 		/**
 		 * Request URI.
          *
@@ -128,7 +136,7 @@ namespace VSGI {
 		 * made available through this property.
 		 */
 		[Version (since = "0.1")]
-		public Soup.URI uri { get; construct; }
+		public Uri uri { get; construct; }
 
 		/**
 		 * HTTP query parsed if encoded according to percent-encoding,
@@ -203,7 +211,7 @@ namespace VSGI {
 			Soup.Cookie? found = null;
 
 			foreach (var cookie in cookies)
-				if (cookie.name == name)
+				if (cookie.get_name () == name)
 					found = cookie;
 
 			return found;
@@ -228,7 +236,7 @@ namespace VSGI {
 			@value        = null;
 
 			foreach (var cookie in cookies)
-				if (cookie.name == name && CookieUtils.verify (cookie, checksum_type, key, out @value))
+				if (cookie.get_name () == name && CookieUtils.verify (cookie, checksum_type, key, out @value))
 					found = cookie;
 
 			return found;
@@ -294,7 +302,7 @@ namespace VSGI {
 		[Version (experimental = true)]
 		public Request (IOStream?                  connection,
 		                string                     method,
-		                Soup.URI                   uri,
+		                Uri                        uri,
 		                HashTable<string, string>? query = null,
 		                InputStream?               body  = null) {
 			string[] empty_env = {}; // this is a hack for 'valac-0.24' and 'valac-0.26'
@@ -317,7 +325,6 @@ namespace VSGI {
 		[Version (experimental = true)]
 		public Request.from_cgi_environment (IOStream? connection, [CCode (array_length = false, array_null_terminated = true)] string[] environment, InputStream? body = null) {
 			base (connection:        connection,
-			      uri:               new Soup.URI ("http://localhost/"),
 			      http_version:      Environ.get_variable (environment, "SERVER_PROTOCOL") == "HTTP/1.1" ? Soup.HTTPVersion.@1_1 : Soup.HTTPVersion.@1_0,
 			      gateway_interface: Environ.get_variable (environment, "GATEWAY_INTERFACE") ?? "CGI/1.1",
 			      is_cgi:            true,
@@ -328,36 +335,36 @@ namespace VSGI {
 			var https           = Environ.get_variable (environment, "HTTPS");
 			var path_translated = Environ.get_variable (environment, "PATH_TRANSLATED");
 			if (https != null && https.length > 0 || path_translated != null && path_translated.has_prefix ("https://"))
-				uri.set_scheme ("https");
+				_uri_scheme = "https";
 			else
-				uri.set_scheme ("http");
+				_uri_scheme = "http";
 
-			uri.set_user (Environ.get_variable (environment, "REMOTE_USER"));
-			uri.set_host (Environ.get_variable (environment, "SERVER_NAME"));
+			_uri_userinfo = Environ.get_variable (environment, "REMOTE_USER");
+			_uri_host = Environ.get_variable (environment, "SERVER_NAME");
 
 			var port = Environ.get_variable (environment, "SERVER_PORT");
 			if (port != null)
-				uri.set_port (int.parse (port));
+				_uri_port = int.parse (port);
 
 			var path_info   = Environ.get_variable (environment, "PATH_INFO");
 			var request_uri = Environ.get_variable (environment, "REQUEST_URI");
 			if (path_info != null && path_info.length > 0)
-				uri.set_path (Soup.URI.decode (path_info));
+				_uri_path_encoded = path_info;
 			else if (request_uri != null && request_uri.length > 0)
-				uri.set_path (Soup.URI.decode (request_uri.split ("?", 2)[0])); // strip the query
+				_uri_path_encoded = request_uri.split ("?", 2)[0]; // strip the query
 			else
-				uri.set_path ("/");
+				_uri_path_encoded = "/";
 
 			// raw & parsed HTTP query
 			var query_string = Environ.get_variable (environment, "QUERY_STRING");
 			if (query_string != null && query_string.length > 0) {
-				uri.set_query (query_string);
+				_uri_query = query_string;
 				_query = (HashTable<string,string>) Soup.Form.decode (query_string);
 			} else if (path_translated != null && "?" in path_translated) {
-				uri.set_query (path_translated.split ("?", 2)[1]);
+				_uri_query = path_translated.split ("?", 2)[1];
 				_query = (HashTable<string,string>) Soup.Form.decode (path_translated.split ("?", 2)[1]);
 			} else if (request_uri != null && "?" in request_uri) {
-				uri.set_query (request_uri.split ("?", 2)[1]);
+				_uri_query = request_uri.split ("?", 2)[1];
 				_query = (HashTable<string,string>) Soup.Form.decode (request_uri.split ("?", 2)[1]);
 			}
 
@@ -389,9 +396,13 @@ namespace VSGI {
 				_headers = new Soup.MessageHeaders (Soup.MessageHeadersType.REQUEST);
 			}
 			if (_query == null) {
-				_query = uri.get_query () == null ? null : (HashTable<string,string>) Soup.Form.decode (uri.get_query ());
+				_query = _uri.get_query () == null ? null : (HashTable<string,string>) Soup.Form.decode (_uri.get_query ());
 			} else {
-				_uri.set_query_from_form (_query);
+				_uri_query = Soup.Form.encode (_query);
+			}
+			if (_uri == null) {
+				// TODO
+				_uri = Uri.build (UriFlags.ENCODED_PATH, _uri_scheme, _uri_userinfo, _uri_host, _uri_port, _uri_path_encoded, _uri_query, null);
 			}
 		}
 

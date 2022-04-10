@@ -38,7 +38,7 @@ public int main (string[] args) {
 			assert_not_reached ();
 		}
 
-		assert ("https" == https_server.uris.data.scheme);
+		assert ("https" == https_server.uris.data.get_scheme ());
 	});
 
 	return Test.run ();

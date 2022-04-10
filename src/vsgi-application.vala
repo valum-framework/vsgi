@@ -195,7 +195,7 @@ public class VSGI.Application : GLib.Application {
 		}
 
 		foreach (var uri in server.uris) {
-			message ("Listening on '%s'.", uri.to_string (false));
+			message ("Listening on '%s'.", uri.to_string ());
 		}
 
 		// keep the process (and workers) alive

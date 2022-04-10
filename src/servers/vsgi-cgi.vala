@@ -42,9 +42,9 @@ namespace VSGI.CGI {
 	[Version (since = "0.1")]
 	public class Server : VSGI.Server {
 
-		public override SList<Soup.URI> uris {
+		public override SList<Uri> uris {
 			owned get {
-				return new SList<Soup.URI> ();
+				return new SList<Uri> ();
 			}
 		}
 
