@@ -23,7 +23,7 @@ vsgi_lib_extra_args = {
 }
 
 vsgi_lib = library('vsgi-' + api_version, vsgi_sources,
-                   dependencies: [glib, gobject, gio, gio_unix, gmodule, soup, openssl, posix],
+                   dependencies: [glib_dep, gobject_dep, gio_dep, gio_unix_dep, gmodule_dep, soup_dep, openssl_dep, posix_dep],
                    vala_header: 'vsgi.h',
                    vala_gir: 'VSGI-@0@.gir'.format(api_version),
                    build_rpath: meson.current_build_dir() / 'servers',
