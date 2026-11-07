@@ -17,21 +17,35 @@ vsgi_sources = files(
     'vsgi-server.vala',
     'vsgi-socket-server.vala',
     'vsgi-tee-output-stream.vala')
+vsgi_lib_extra_args = {}
+if meson.version().version_compare('>=1.11.0')
+    vsgi_lib_extra_args += {
+        'install_vala_header': 'include/vsgi-' + api_version,
+        'install_vala_vapi': true,
+        'install_vala_gir': true,
+    }
+else
+    vsgi_lib_extra_args += {
+        'install_dir': [true, 'include/vsgi-' + api_version, true, true],
+    }
+endif
+
 vsgi_lib = library('vsgi-' + api_version, vsgi_sources,
                    dependencies: [glib, gobject, gio, gio_unix, gmodule, soup, openssl, posix],
                    vala_header: 'vsgi.h',
                    vala_gir: 'VSGI-@0@.gir'.format(api_version),
-                   build_rpath: join_paths(meson.current_build_dir(), 'servers'),
+                   build_rpath: meson.current_build_dir() / 'servers',
                    link_args: ['-Wl,--disable-new-dtags'],
                    install: true,
-                   install_dir: [true, 'include/vsgi-' + api_version, true, true],
-                   install_rpath: join_paths(get_option('prefix'), get_option('libdir'), 'vsgi-@0@/servers'.format(api_version)))
+                   install_rpath: get_option('prefix') / get_option('libdir') / 'vsgi-@0@/servers'.format(api_version),
+                   kwargs: vsgi_lib_extra_args)
 
 install_data('vsgi-@0@.deps'.format(api_version),
              install_dir: 'share/vala/vapi')
 
 vsgi_dep = declare_dependency(include_directories: include_directories('.'),
                               link_with: vsgi_lib)
+meson.override_dependency('vsgi', vsgi_dep)
 
 if get_option('with_introspection')
     g_ir_compiler = find_program('g-ir-compiler')

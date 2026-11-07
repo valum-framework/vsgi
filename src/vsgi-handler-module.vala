@@ -57,7 +57,8 @@ public class VSGI.HandlerModule : TypeModule {
 	}
 
 	construct {
-		path = Module.build_path (directory, name)[0:-Module.SUFFIX.length - 1];
+		string module_name = name.has_prefix ("lib") ? name : "lib%s".printf (name);
+		path = directory != null ? Path.build_filename (directory, module_name) : module_name;
 	}
 
 	public override bool load () {
