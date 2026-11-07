@@ -18,7 +18,7 @@
 using GLib;
 
 #if HAVE_MEMMEM
-private extern void* memmem (uint8[] haystack, uint8[] needle);
+private extern void* memmem ([CCode(type = "const void*", array_length_type = "size_t")] uint8[] haystack, [CCode(type = "const void*", array_length_type = "size_t")] uint8[] needle);
 #else
 private void* memmem (uint8[] haystack, uint8[] needle) {
 	for (var i = 0; i < haystack.length - needle.length + 1; i++) {

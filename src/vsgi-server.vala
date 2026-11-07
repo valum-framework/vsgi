@@ -19,6 +19,9 @@ using GLib;
 
 namespace VSGI {
 
+	[CCode (cname = "vsgi_server_construct")]
+	public extern unowned Server server_construct (GLib.Type object_type);
+
 	/**
 	 * Server that feeds a {@link VSGI.Handler} with incoming requests.
 	 *
