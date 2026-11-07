@@ -17,18 +17,10 @@ vsgi_sources = files(
     'vsgi-server.vala',
     'vsgi-socket-server.vala',
     'vsgi-tee-output-stream.vala')
-vsgi_lib_extra_args = {}
-if meson.version().version_compare('>=1.11.0')
-    vsgi_lib_extra_args += {
-        'install_vala_header': 'include/vsgi-' + api_version,
-        'install_vala_vapi': true,
-        'install_vala_gir': true,
-    }
-else
-    vsgi_lib_extra_args += {
-        'install_dir': [true, 'include/vsgi-' + api_version, true, true],
-    }
-endif
+
+vsgi_lib_extra_args = {
+    'install_dir': [true, 'include/vsgi-' + api_version, true, true],
+}
 
 vsgi_lib = library('vsgi-' + api_version, vsgi_sources,
                    dependencies: [glib, gobject, gio, gio_unix, gmodule, soup, openssl, posix],
