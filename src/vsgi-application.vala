@@ -161,6 +161,10 @@ public class VSGI.Application : GLib.Application {
 
 			// default listening interface
 			if (addresses == null && ports == null && sockets == null && fds == null) {
+				if (ipv4_only != null || ipv6_only != null) {
+					critical ("The --ipv4-only and --ipv6-only options only work if a port (via --port) is supplied.");
+					return 1;
+				}
 				server.listen ();
 			}
 
