@@ -1,3 +1,5 @@
+[![Build Status](https://github.com/valum-framework/vsgi/actions/workflows/main.yaml/badge.svg)](https://github.com/valum-framework/vsgi/actions/workflows/main.yaml)
+
 # Vala Server Gateway Interface
 
 VSGI is a middleware that interfaces different Web server technologies under a common and simple set of abstractions.
